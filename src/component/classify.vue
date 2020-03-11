@@ -114,7 +114,7 @@ export default {
               result.body.message.forEach(item => {
                 this.list.push({
                   msg: item,
-                  type: '[仙侠]'
+                  type: '[修真]'
                 })
               })
               this.typeNum = 2

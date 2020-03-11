@@ -16,7 +16,8 @@ const store = new Vuex.Store({
     classifyIndex: 0, //分类页序
     status: false, //登陆状态
     rankIndex: 0,
-    rankType: 0 //排行类别
+    rankType: 0, //排行类别
+    userName: ''
   },
   mutations: {
     changeIndex(state, index) {
@@ -34,8 +35,11 @@ const store = new Vuex.Store({
     changeRanktype(state, type) {
       state.rankType = type
     },
-    changeClassifyIndex(state, indexindex) {
-      state.classifyIndex = indexindex
+    changeClassifyIndex(state, index) {
+      state.classifyIndex = index
+    },
+    changeUserName(state, username) {
+      state.userName = username
     }
   },
   getters: {}
@@ -56,7 +60,7 @@ import vueResource from 'vue-resource'
 //2.2 安装vue-resource
 Vue.use(vueResource)
 // 设置请求的根路径
-Vue.http.options.root = 'http://localhost:5888/'
+Vue.http.options.root = 'http://www.yjste.cn:5888/'
 // 全局设置 post 时候表单数据格式组织形式   application/x-www-form-urlencoded
 Vue.http.options.emulateJSON = true
 
@@ -69,6 +73,11 @@ import { Header, Button, Field } from 'mint-ui'
 Vue.component(Header.name, Header)
 Vue.component(Button.name, Button)
 Vue.component(Field.name, Field)
+
+//导入ISCROLL
+import IScrollView from 'vue-iscroll-view'
+import IScroll from 'iscroll'
+Vue.use(IScrollView, IScroll)
 
 // import MintUI from 'mint-ui'
 // Vue.use(MintUI)
@@ -84,7 +93,7 @@ import router from './router'
 //导入 App 根组件
 import app from './App.vue'
 
-let vm = new Vue({
+var vm = new Vue({
   el: '#app',
   render: c => c(app),
   router, //1.4 挂载路由

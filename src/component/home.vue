@@ -30,7 +30,7 @@
           <div class="show">
             <div class="show-left">
               <a href="#">
-                <img :src="item.imgSrc" alt />
+                <img :src="item.picUrl" alt />
               </a>
             </div>
             <div class="show-right">
@@ -43,15 +43,15 @@
                 <a @click="goAuthor(item.author)">{{ item.author }}</a>
               </p>
               <p>
-                <a href="#">{{ item.info }}</a>
+                <a href="#">{{ item.showInfo }}</a>
               </p>
             </div>
           </div>
           <ul claass="list">
-            <li v-for="ele in item.novelList" :key="ele.id">
-              <a @click="goClassify(ele.novelType)">{{ ele.novelType }}</a>
-              <a @click="goDetail(ele.novelname)">{{ ele.novelname }}</a>/
-              <a @click="goAuthor(ele.novelAuthor)">{{ ele.novelAuthor }}</a>
+            <li v-for="ele in item.list" :key="ele.id">
+              <a @click="goClassify(ele.classifyType)">{{ ele.classifyType }}</a>
+              <a @click="goDetail(ele.bookName)">{{ ele.bookName }}</a>/
+              <a @click="goAuthor(ele.author)">{{ ele.author }}</a>
             </li>
           </ul>
         </div>
@@ -84,8 +84,47 @@ export default {
       if (!homeList) {
         this.$http.get('recommend').then(function(result) {
           if (result.body.code === 200) {
-            this.recommendList = result.body.message
-
+            let list = result.body.message
+            list.forEach(item => {
+              if (item.classifyType === 1) {
+                item.classifyType = '[玄幻]'
+              } else if (item.classifyType === 2) {
+                item.classifyType = '[修真]'
+              } else if (item.classifyType === 3) {
+                item.classifyType = '[都市]'
+              } else if (item.classifyType === 4) {
+                item.classifyType = '[历史]'
+              } else if (item.classifyType === 5) {
+                item.classifyType = '[游戏]'
+              } else if (item.classifyType === 6) {
+                item.classifyType = '[科幻]'
+              }
+            })
+            let clickList = {
+              picUrl: list[0].picUrl,
+              author: list[0].author,
+              bookName: list[0].bookName,
+              showInfo: list[0].showInfo,
+              list: list.slice(1, 10),
+              type: '点击排行'
+            }
+            let recomList = {
+              picUrl: list[10].picUrl,
+              author: list[10].author,
+              bookName: list[10].bookName,
+              showInfo: list[10].showInfo,
+              list: list.slice(11, 20),
+              type: '推荐排行'
+            }
+            let collectList = {
+              picUrl: list[20].picUrl,
+              author: list[20].author,
+              bookName: list[20].bookName,
+              showInfo: list[20].showInfo,
+              list: list.slice(21, 30),
+              type: '收藏排行'
+            }
+            this.recommendList = [clickList, recomList, collectList]
             sessionStorage.setItem(
               'homeList',
               JSON.stringify(this.recommendList)

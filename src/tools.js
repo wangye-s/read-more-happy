@@ -33,7 +33,15 @@ import { get } from 'mongoose'
   }
 
   //设置书架
-  function setBookRack(imgSrc, bookName, newChapter, author, lastRead) {
+  function setBookRack(
+    imgSrc,
+    bookName,
+    newChapter,
+    author,
+    lastRead,
+    chapterList,
+    index
+  ) {
     let collectArray = getBookRack()
     let flag = false
     for (let i = 0; i < collectArray.length; i++) {
@@ -49,18 +57,21 @@ import { get } from 'mongoose'
         bookName,
         newChapter,
         author,
-        lastRead
+        lastRead,
+        chapterList,
+        index
       })
     }
 
     localStorage.setItem('collectArray', JSON.stringify(collectArray))
   }
   //更新书架书籍阅读记录
-  function updataBookRack(bookName, lastRead) {
+  function updataBookRack(bookName, lastRead, index) {
     let collectArray = getBookRack()
     collectArray.forEach((item, i) => {
       if (bookName === item.bookName && item.lastRead !== lastRead) {
         item.lastRead = lastRead
+        item.index = index
       }
     })
     localStorage.setItem('collectArray', JSON.stringify(collectArray))
@@ -74,6 +85,16 @@ import { get } from 'mongoose'
     }
     return collectArray
   }
+  function getRackBookList(name) {
+    let collectArray = localStorage.getItem('collectArray')
+    let newList = []
+    JSON.parse(collectArray).forEach(item => {
+      if (item.bookName === name) {
+        newList.push({ chapterList: item.chapterList, index: item.index })
+      }
+    })
+    return newList
+  }
   function clearRack(bookName) {
     let collectArray = getBookRack()
     let newArray = []
@@ -86,11 +107,14 @@ import { get } from 'mongoose'
   }
 
   //登录状态
-  function setStatus(status) {
-    sessionStorage.setItem('statusArr', status)
+  function setStatus(status, userName) {
+    let statu = [status, userName]
+    sessionStorage.setItem('statusArr', JSON.stringify(statu))
   }
   function getStatus() {
-    return sessionStorage.getItem('statusArr')
+    let statuArr = sessionStorage.getItem('statusArr')
+
+    return JSON.parse(statuArr)
   }
   function clearStatus() {
     sessionStorage.removeItem('statusArr')
@@ -143,4 +167,5 @@ import { get } from 'mongoose'
   window.clearStatus = clearStatus
   window.setHomeList = setHomeList
   window.getHomeList = getHomeList
+  window.getRackBookList = getRackBookList
 })()

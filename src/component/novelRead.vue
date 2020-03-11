@@ -1,19 +1,12 @@
 <template>
-  <div class="read-box" ref="read">
-    <div class="nav">
-      <a @click="nextPre(preHref)">上一章</a>
-      <a @click="nextPre(nextHref)">下一章</a>
-    </div>
-    <div class="title">
-      <h2>{{ this.title }}</h2>
-    </div>
-    <div class="content">
-      <p v-html="this.text"></p>
-    </div>
-
-    <div class="nav-bottom">
-      <a @click="nextPre(preHref)">上一章</a>
-      <a @click="nextPre(nextHref)">下一章</a>
+  <div class="read-box" ref="read" @scroll="getScroll($event)">
+    <div class="contentBox" v-for="item in this.contentList" :key="item.id">
+      <div class="title">
+        <h2>{{ item.title }}</h2>
+      </div>
+      <div class="content">
+        <p v-html="item.text"></p>
+      </div>
     </div>
   </div>
 </template>
@@ -29,29 +22,81 @@ export default {
       text: '',
       preHref: '',
       nextHref: '',
-      title: ''
+      title: '',
+      flag: true,
+      contentList: [],
+      bookName: this.$route.query.name,
+      chapterList: [],
+      index: this.$route.query.index + 1, //记录从章节列表点击过来的索引 从0开始
+      recIndex: this.$route.query.index + 1
     }
   },
   created() {
+    this.index =
+      this.$route.query.index + 1 || getRackBookList(this.bookName)[0].index
+    this.recIndex = this.index
     this.getDetail(this.$route.query.href)
+    this.chapterList =
+      getChapterList(this.bookName)[0].chapterList ||
+      getRackBookList(this.bookName)[0].chapterList
   },
   methods: {
     getDetail(href) {
       this.$http.get('getChapter?href=' + href).then(function(result) {
-        this.text = result.body.message
+        this.contentList.push({
+          text: result.body.message,
+          title: result.body.title
+        })
+
         this.preHref = result.body.preHref
         this.nextHref = result.body.nextHref
-        this.title = result.body.title
+        this.flag = true
       })
       //更新localStorage 中的数据, 记录上次阅读的位置
-      updataBookRack(this.$route.query.name, href)
+      updataBookRack(this.$route.query.name, href, this.recIndex)
+    },
+    //获取更多
+    getMoreDetail(i) {
+      let newList = []
+      this.chapterList.splice(i, 2).forEach(item => {
+        newList.push(item.href)
+      })
+      this.$http.get('testChapter?urls=' + newList).then(result => {
+        result.body.forEach(ele => {
+          this.contentList.push({
+            text: ele.text,
+            title: ele.title
+          })
+          this.preHref = ele.preHref
+          this.nextHref = ele.nextHref
+          this.flag = true
+        })
+
+        updataBookRack(
+          this.$route.query.name,
+          result.body[1].preHref,
+          (this.recIndex += 1)
+        )
+        // console.log(this.recIndex)
+      })
     },
     nextPre(href) {
       this.getDetail(href)
       //回到顶部
       let content = document.querySelector('.header')
-      // console.log(content)
+
       content.scrollIntoView()
+    },
+    getScroll(e) {
+      if (
+        e.srcElement.scrollTop + e.srcElement.offsetHeight >
+          e.srcElement.scrollHeight - 100 &&
+        this.flag
+      ) {
+        this.flag = false
+
+        this.getMoreDetail(this.index)
+      }
     }
   },
   mounted() {
@@ -72,23 +117,31 @@ export default {
   height: 100%;
   overflow: hidden;
   font-size: 16px;
-  .title {
-    h2 {
-      font-size: 1.8rem;
-      text-align: center;
+  position: fixed;
+  top: 5rem;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto;
+  .contentBox {
+    .title {
+      h2 {
+        font-size: 1.8rem;
+        text-align: center;
+      }
     }
-  }
-  .content {
-    p {
-      line-height: 150%;
-      text-align: left;
-      text-indent: 2em;
-      // overflow-wrap: break-word;
-      font-family: 'Microsoft Yahei', Georgia, Serif;
-      font-size: 1.8rem;
-      padding: 1.5rem 0;
-      color: #666;
-      letter-spacing: 0.2em;
+    .content {
+      p {
+        line-height: 150%;
+        text-align: left;
+        text-indent: 2em;
+        // overflow-wrap: break-word;
+        font-family: 'Microsoft Yahei', Georgia, Serif;
+        font-size: 1.8rem;
+        padding: 1.5rem 0;
+        color: #666;
+        letter-spacing: 0.2em;
+      }
     }
   }
 

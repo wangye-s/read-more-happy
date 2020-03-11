@@ -2,15 +2,18 @@
   <div class="list">
     <div class="list-header">
       <h2>{{ this.bookName }}</h2>
-      <span>
+      <!-- <span>
         <a @click="positive">[正序]</a>
         <a @click="inverted">[倒序]</a>
-      </span>
+      </span>-->
     </div>
     <ul class="chapter-list">
       <router-link
-        :to="{ path: 'novelRead', query: { href: item.href, name: bookName } }"
-        v-for="item in this.sliceList"
+        :to="{
+          path: 'novelRead',
+          query: { href: item.href, name: bookName, index:  (recIndex + index)} //0-24  25-59   1 2 3 4 index+(page-1)*25
+        }"
+        v-for="(item, index) in this.sliceList"
         :key="item.id"
         tag="li"
       >
@@ -19,23 +22,13 @@
       </router-link>
     </ul>
     <div class="pagination">
-      <button
-        type="button"
-        class="mui-btn mui-btn-primary mui-btn-outlined pre"
-        @click="pre()"
-      >
-        上一页
-      </button>
-      <button type="button" class="mui-btn select" @click="show">
-        第{{ this.page }}页
-      </button>
+      <button type="button" class="mui-btn mui-btn-primary mui-btn-outlined pre" @click="pre()">上一页</button>
+      <button type="button" class="mui-btn select" @click="show">第{{ this.page }}页</button>
       <button
         type="button"
         class="mui-btn mui-btn-primary mui-btn-outlined next"
         @click="next()"
-      >
-        下一页
-      </button>
+      >下一页</button>
     </div>
     <div class="mask-in" v-show="showFlag">
       <div class="mask-hide" @click="hide"></div>
@@ -48,9 +41,7 @@
           @click="gotoPage(i)"
           v-for="(item, i) in this.slicePage"
           :key="item.id"
-        >
-          第{{ item.first }}章 - 第{{ item.last }}章
-        </li>
+        >第{{ item.first }}章 - 第{{ item.last }}章</li>
       </ul>
     </div>
   </div>
@@ -69,13 +60,20 @@ export default {
       page: 1, //当前页数
       showFlag: false,
       slicePage: [],
-      sortFlag: true
+      sortFlag: this.$store.state.sortFlag, //判断正序逆序
+      recIndex: 0, //给阅读界面传递章节对应的索引
+      chapterLength: 0
     }
   },
   created() {
+    // 整个列表的长度 点击单页列表, 记录对应的索引
+    //传递到阅读界面, 阅读模块将传递过去的索引保存
     this.chapterList = getChapterList(this.bookName)[0].chapterList
+    this.chapterLength = this.chapterList.length
+
     this.sliceList = this.reduceChapter(this.$store.state.index)
     this.page = this.$store.state.index / 25 + 1
+    this.recIndex = (this.page - 1) * 25
   },
   methods: {
     //处理章节分页
@@ -88,11 +86,18 @@ export default {
     },
     next() {
       let index = this.$store.state.index
-      this.$store.commit('changeIndex', index + 25)
-      this.sliceList = this.reduceChapter(this.$store.state.index)
-      this.page += 1
-      let content = document.querySelector('.header')
-      content.scrollIntoView()
+      if (this.page < Math.ceil(this.chapterList.length / 25)) {
+        this.sortFlag = this.$store.state.sortFlag
+
+        this.$store.commit('changeIndex', index + 25)
+        this.sliceList = this.reduceChapter(this.$store.state.index)
+        this.page += 1
+        let content = document.querySelector('.header')
+        content.scrollIntoView()
+        this.recIndex = (this.page - 1) * 25
+      } else {
+        Toast('后面没有了')
+      }
     },
     pre() {
       let index = this.$store.state.index
@@ -102,6 +107,9 @@ export default {
         content.scrollIntoView()
         this.sliceList = this.reduceChapter(this.$store.state.index)
         this.page -= 1
+        this.recIndex = (this.page - 1) * 25
+      } else {
+        Toast('前面没有了~')
       }
     },
     getText(href) {
@@ -132,20 +140,7 @@ export default {
       this.$store.commit('changeIndex', index * 25)
       this.sliceList = this.reduceChapter(this.$store.state.index)
       this.showFlag = false
-    },
-    positive() {
-      if (this.sortFlag === false) {
-        this.chapterList = this.chapterList.reverse()
-        this.sliceList = this.reduceChapter(this.$store.state.index)
-        this.sortFlag = true
-      }
-    },
-    inverted() {
-      if (this.sortFlag === true) {
-        this.chapterList = this.chapterList.reverse()
-        this.sliceList = this.reduceChapter(this.$store.state.index)
-        this.sortFlag = false
-      }
+      this.recIndex = (this.page - 1) * 25
     }
   }
 }

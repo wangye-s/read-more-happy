@@ -1,7 +1,6 @@
 <template>
   <div class="login-con">
     <div class="login-in">
-      <mt-field label="用户名" :state="this.nameFlag" placeholder="请输入用户名" v-model="userName"></mt-field>
       <mt-field
         label="邮箱"
         @blur.native.capture="chectedEmail()"
@@ -23,7 +22,6 @@ import '../tools.js'
 export default {
   data() {
     return {
-      userName: '',
       email: '',
       password: '',
       nameFlag: '',
@@ -35,10 +33,8 @@ export default {
       this.validate_email(this.email)
     },
     login() {
-      let isNull =
-        this.userName !== '' && this.email !== '' && this.password !== ''
-      let isChected =
-        this.nameFlag === 'success' && this.emailFlag === 'success'
+      let isNull = this.email !== '' && this.password !== ''
+      let isChected = this.emailFlag === 'success'
       if ((isNull, isChected)) {
         this.$http
           .post(
@@ -55,8 +51,10 @@ export default {
               Toast('请刷新页面')
             }
             if (result.body.code === 200) {
-              setStatus(true)
+              setStatus(true, result.body.message)
               this.$store.commit('changeStatus', true)
+              // this.$store.commit('changeUserName', result.body.message)
+
               this.$router.push('/home')
             } else {
               Toast('用户名或密码错误')
@@ -79,27 +77,9 @@ export default {
         this.emailFlag = 'success'
         return true
       }
-    },
-    //验证中文输入
-    isChinese(obj) {
-      let reg = /^[\u0391-\uFFE5]+$/
-      if (obj !== '' && !reg.test(obj)) {
-        this.nameFlag = 'error'
-        return false
-      } else {
-        this.nameFlag = 'success'
-        return true
-      }
     }
   },
   watch: {
-    userName: function(newVal, oldVal) {
-      if (newVal !== '') {
-        this.isChinese(newVal)
-      } else {
-        this.nameFlag = ''
-      }
-    },
     email: function(newVal, oldVal) {
       if (newVal === '') {
         this.emailFlag = ''

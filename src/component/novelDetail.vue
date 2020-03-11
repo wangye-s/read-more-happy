@@ -61,11 +61,11 @@
         <h4>最新章节预览</h4>
       </div>
       <ul class="chapter-list">
-        <li v-for="item in this.newList" :key="item.id">
+        <li v-for="(item, i) in this.newList" :key="item.id">
           <router-link
             :to="{
               path: 'novelRead',
-              query: { href: item.href, name: bookname }
+              query: { href: item.href, name: bookname, index: listLength - i }
             }"
             tag="a"
           >{{ item.chapter }}</router-link>
@@ -85,7 +85,9 @@ export default {
       novelDetail: [],
       newList: [],
       chapterList: [],
-      firstHref: ''
+      firstHref: '',
+      listLength: 0,
+      listFlag: false
     }
   },
   created() {
@@ -107,7 +109,7 @@ export default {
         .post('findNovel', { title: bookname }, { emulateJSON: true })
         .then(function(result) {
           this.novelDetail = result.body.message
-          this.newList = this.novelDetail.newList.slice(-10)
+          this.newList = this.novelDetail.newList.reverse()
           this.firstHref = this.novelDetail.firstHref
         })
     },
@@ -117,7 +119,7 @@ export default {
         .post('updateNovel', { title: bookname }, { emulateJSON: true })
         .then(function(result) {
           this.novelDetail = result.body.message
-          this.newList = this.novelDetail.newList.slice(-10)
+          this.newList = this.novelDetail.newList.reverse()
           this.firstHref = this.novelDetail.firstHref
         })
     },
@@ -127,27 +129,39 @@ export default {
         .post('getAllChapter', { name: name }, { emulateJSON: true })
         .then(function(result) {
           this.chapterList = result.body.message
+          this.listLength = this.chapterList.length
           setChapterList({
             chapterList: this.chapterList,
             bookName: this.bookname
           })
+          this.listFlag = true
         })
     },
     //跳转到章节列表
     postList(bookName) {
-      this.$router.push({ path: '/chapterList', query: { bookName } })
+      if (this.listFlag) {
+        this.$router.push({ path: '/chapterList', query: { bookName } })
+      } else {
+        Toast('请稍等')
+      }
     },
     //添加到书架
     addToRock() {
-      setBookRack(
-        this.novelDetail.imgSrc,
-        this.novelDetail.bookName,
-        this.novelDetail.newChapter,
-        this.novelDetail.author,
-        this.firstHref
-      )
-      Toast('添加成功~')
-      this.updateCollect()
+      if (this.novelDetail.author !== undefined) {
+        setBookRack(
+          this.novelDetail.imgSrc,
+          this.novelDetail.bookName,
+          this.novelDetail.newChapter,
+          this.novelDetail.author,
+          this.firstHref,
+          this.chapterList,
+          1
+        )
+        Toast('添加成功~')
+        this.updateCollect()
+      } else {
+        Toast('请稍等')
+      }
     },
     down() {
       Toast('暂未提供下载功能~')

@@ -22,9 +22,13 @@
             </p>
           </div>
           <div class="menu">
-            <span @click.stop="showMemu()" v-show="flag" class="sele mui-icon mui-icon-bars"></span>
             <span
-              @click.stop="dele(item.bookName,index)"
+              @click.stop="showMemu()"
+              v-show="flag"
+              class="sele mui-icon mui-icon-bars"
+            ></span>
+            <span
+              @click.stop="dele(item.bookName, index)"
               v-show="!flag"
               class="del mui-icon mui-icon-trash"
             ></span>

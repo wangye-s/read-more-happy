@@ -14,6 +14,7 @@
       <div class="right">
         <div class="last" v-show="status">
           <!-- <router-link class="login" tag="a" to="/login">首页</router-link> -->
+          <a :style="{'color': '#26a2ff'}">{{ this.userName }}</a>
           <a class="back" @click="back">退出</a>
           <!-- <router-link  tag="a" to="/login">退出</router-link> -->
         </div>
@@ -49,14 +50,19 @@ export default {
     return {
       navFlag: true,
       flag: false,
-      status: false
+      status: false,
+      userName: ''
     }
   },
   created() {
+    document.body.removeChild(document.getElementById('Loading'))
     //当页面一加载时, 判断路由是否为 /home
     this.flag = this.$route.path === '/home' ? false : true
     this.navFlag = this.$route.path === '/novelRead' ? false : true
-    this.status = getStatus()
+    if (getStatus()) {
+      this.status = getStatus()[0]
+      this.userName = getStatus()[1]
+    }
   },
   methods: {
     //点击后退
@@ -81,8 +87,16 @@ export default {
       this.$store.commit('changeRanktype', 0)
     }
   },
+  mounted() {
+    // this.userName = this.$store.state.userName
+  },
   updated() {
-    this.status = getStatus()
+    if (!getStatus()) {
+      this.status = false
+    } else {
+      this.status = getStatus()[0]
+      this.userName = getStatus()[1]
+    }
   },
 
   watch: {
@@ -125,6 +139,7 @@ export default {
     display: flex;
     justify-content: space-between;
     padding: 0 2rem 0 0;
+
     a {
       text-decoration: none;
       color: #fff;

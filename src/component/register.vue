@@ -53,9 +53,16 @@ export default {
       this.validate_email(this.email)
     },
     checkBlur() {
-      if (this.password === this.newPassword) {
+      if (
+        this.password === this.newPassword &&
+        this.password !== '' &&
+        this.newPassword !== ''
+      ) {
         this.pasFlag = 'success'
         this.newPasFlag = 'success'
+      } else if (this.password === '' && this.newPassword === '') {
+        this.newPasFlag = ''
+        this.pasFlag = ''
       } else {
         this.newPasFlag = 'error'
         this.pasFlag = ''
